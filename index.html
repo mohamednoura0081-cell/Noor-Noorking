@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Noorking - Secure Messaging & Imagenow UI Generator</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        tg: {
+                            dark: '#0e1621',
+                            panel: '#17212b',
+                            panelHover: '#202b36',
+                            active: '#2b5278',
+                            bubbleOut: '#2b5278',
+                            bubbleIn: '#182533',
+                            accent: '#3390ec',
+                            accentHover: '#2378cb',
+                            text: '#f5f5f5',
+                            textSecondary: '#708499',
+                            border: '#0e1621',
+                            inputBg: '#242f3d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(112, 132, 153, 0.3);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(112, 132, 153, 0.5);
+        }
+        .chat-bg {
+            background-color: #0e1621;
+            background-image: radial-gradient(circle at 50% 50%, rgba(23, 33, 43, 0.3) 0%, rgba(14, 22, 33, 0.9) 100%);
+        }
+    </style>
+</head>
+<body class="bg-tg-dark text-tg-text h-screen overflow-hidden font-sans select-none">
+
+    <div id="app" class="flex h-full w-full relative overflow-hidden">
+
+        <!-- MAIN APP NAVIGATION / MODE SWITCHER SIDEBAR -->
+        <div class="w-16 bg-tg-dark border-r border-[#0e1621] flex flex-col items-center py-4 gap-4 z-30 shrink-0">
+            <div class="w-10 h-10 bg-tg-accent rounded-2xl flex items-center justify-center text-white font-bold text-lg shadow-lg cursor-pointer" title="Noorking Hub">
+                NK
+            </div>
+            <div class="w-8 h-[1px] bg-[#0e1621] my-1"></div>
+            
+            <button onclick="switchAppMode('chat')" id="nav-chat-btn" class="p-3 bg-tg-active text-white rounded-2xl transition shadow-md" title="Messagerie Telegram">
+                <i data-lucide="message-square" class="w-5 h-5"></i>
+            </button>
+            <button onclick="switchAppMode('imagenow')" id="nav-imagenow-btn" class="p-3 text-tg-textSecondary hover:text-tg-text hover:bg-tg-panel rounded-2xl transition" title="Imagenow UI Generator">
+                <i data-lucide="sparkles" class="w-5 h-5"></i>
+            </button>
+            
+            <div class="mt-auto">
+                <button onclick="toggleTheme()" class="p-3 text-tg-textSecondary hover:text-tg-text hover:bg-tg-panel rounded-2xl transition" title="Changer le thème">
+                    <i data-lucide="moon" id="global-theme-icon" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 1: TELEGRAM SECURE MESSAGING -->
+        <div id="view-chat" class="flex-1 flex h-full relative overflow-hidden">
+            
+            <!-- SIDEBAR / CHAT LIST -->
+            <aside id="sidebar" class="w-full md:w-[360px] lg:w-[400px] bg-tg-panel flex flex-col h-full border-r border-[#0e1621] z-20 transition-all duration-300 absolute md:relative inset-y-0 left-0">
+                
+                <!-- Sidebar Header -->
+                <div class="p-3 flex items-center justify-between gap-3 border-b border-[#0e1621]">
+                    <button onclick="toggleDrawer()" class="p-2 hover:bg-tg-panelHover rounded-full text-tg-textSecondary hover:text-tg-text transition" title="Menu Noorking">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+
+                    <!-- Search Bar -->
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-tg-textSecondary">
+                            <i data-lucide="search" class="w-4 h-4"></i>
+                        </span>
+                        <input type="text" id="search-input" oninput="filterChats()" placeholder="Rechercher sur Noorking..." class="w-full bg-tg-inputBg text-tg-text text-sm rounded-full pl-9 pr-4 py-2 focus:outline-none focus:ring-1 focus:ring-tg-accent transition placeholder-tg-textSecondary">
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="flex border-b border-[#0e1621] overflow-x-auto no-scrollbar px-2 py-1 gap-1 bg-tg-panel">
+                    <button onclick="switchTab('all')" class="tab-btn px-3 py-1.5 rounded-full text-xs font-medium text-tg-accent bg-tg-active transition whitespace-nowrap" data-tab="all">Tous</button>
+                    <button onclick="switchTab('chats')" class="tab-btn px-3 py-1.5 rounded-full text-xs font-medium text-tg-textSecondary hover:text-tg-text hover:bg-tg-panelHover transition whitespace-nowrap" data-tab="chats">Discussions</button>
+                    <button onclick="switchTab('groups')" class="tab-btn px-3 py-1.5 rounded-full text-xs font-medium text-tg-textSecondary hover:text-tg-text hover:bg-tg-panelHover transition whitespace-nowrap" data-tab="groups">Groupes</button>
+                    <button onclick="switchTab('channels')" class="tab-btn px-3 py-1.5 rounded-full text-xs font-medium text-tg-textSecondary hover:text-tg-text hover:bg-tg-panelHover transition whitespace-nowrap" data-tab="channels">Canaux</button>
+                </div>
+
+                <!-- Chat Items List -->
+                <div id="chats-list" class="flex-1 overflow-y-auto divide-y divide-[#0e1621]/50">
+                    <!-- Populated dynamically -->
+                </div>
+            </aside>
+
+            <!-- CHAT WINDOW -->
+            <main id="chat-window" class="flex-1 flex flex-col h-full chat-bg relative z-10 w-full">
+                
+                <!-- Chat Header -->
+                <div id="chat-header" class="h-14 bg-tg-panel border-b border-[#0e1621] px-4 flex items-center justify-between z-10 shadow-sm">
+                    <div class="flex items-center gap-3 cursor-pointer" onclick="openProfileModal()">
+                        <button id="back-btn" onclick="backToSidebar()" class="md:hidden p-1 -ml-1 text-tg-textSecondary hover:text-tg-text">
+                            <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                        </button>
+                        <div class="relative">
+                            <img id="header-avatar" src="https://placehold.co/100x100/2b5278/ffffff?text=NK" class="w-10 h-10 rounded-full object-cover" alt="Avatar">
+                            <span id="header-status-dot" class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-tg-panel rounded-full hidden"></span>
+                        </div>
+                        <div>
+                            <h2 id="header-name" class="font-semibold text-sm text-tg-text">Sélectionner une discussion Noorking</h2>
+                            <p id="header-status" class="text-xs text-tg-textSecondary">Noorking Secure Messenger</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-1">
+                        <button onclick="switchAppMode('imagenow')" class="p-2 hover:bg-tg-panelHover rounded-full text-tg-accent hover:text-white transition flex items-center gap-1 text-xs font-semibold px-3 bg-tg-accent/10" title="Ouvrir Imagenow UI Generator">
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> Imagenow
+                        </button>
+                        <button onclick="simulateCall()" class="p-2 hover:bg-tg-panelHover rounded-full text-tg-textSecondary hover:text-tg-text transition" title="Appel audio">
+                            <i data-lucide="phone" class="w-5 h-5"></i>
+                        </button>
+                        <button onclick="toggleChatMenu()" class="p-2 hover:bg-tg-panelHover rounded-full text-tg-textSecondary hover:text-tg-text transition" title="Options">
+                            <i data-lucide="more-vertical" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Messages Area -->
+                <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-3 flex flex-col">
+                    <!-- Welcome placeholder with integrated Imagenow preview card -->
+                    <div class="m-auto text-center p-6 max-w-lg bg-tg-panel/95 backdrop-blur rounded-2xl border border-[#0e1621] shadow-2xl">
+                        <div class="w-16 h-16 bg-tg-accent/20 text-tg-accent rounded-full flex items-center justify-center mx-auto mb-4 font-bold text-xl">
+                            NK
+                        </div>
+                        <h3 class="text-lg font-bold text-tg-text mb-1">Bienvenue sur Noorking</h3>
+                        <p class="text-xs text-tg-textSecondary mb-4">Messagerie ultra-sécurisée & Générateur Imagenow intégré.</p>
+                        
+                        <!-- Reference Image Banner -->
+                        <div class="rounded-xl overflow-hidden border border-[#0e1621] cursor-pointer group relative mb-4" onclick="switchAppMode('imagenow')">
+                            <img src="Gemini_Generated_Image_lmrrkelmrrkelmrr_2.jpg" class="w-full h-40 object-cover group-hover:scale-105 transition duration-300" alt="Imagenow Reference UI" onerror="this.src='https://placehold.co/600x300/17212b/ffffff?text=Imagenow+Preview'">
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="bg-tg-accent text-white text-xs font-semibold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5">
+                                    <i data-lucide="sparkles" class="w-4 h-4"></i> Ouvrir Imagenow UI Generator
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <button onclick="selectChat(1)" class="flex-1 py-2.5 bg-tg-accent hover:bg-tg-accentHover text-white text-xs font-medium rounded-xl transition shadow-md">
+                                Discuter avec Marie
+                            </button>
+                            <button onclick="switchAppMode('imagenow')" class="flex-1 py-2.5 bg-tg-panelHover hover:bg-tg-active text-tg-text text-xs font-medium rounded-xl transition border border-[#0e1621]">
+                                Mode Imagenow
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Message Input Bar -->
+                <div id="chat-input-area" class="p-3 bg-tg-panel border-t border-[#0e1621] flex items-end gap-2 relative hidden">
+                    <!-- Emoji Picker Popup -->
+                    <div id="emoji-picker" class="absolute bottom-16 left-3 bg-tg-panel border border-[#0e1621] rounded-xl shadow-2xl p-3 hidden grid grid-cols-6 gap-2 w-64 z-30">
+                        <span onclick="insertEmoji('😀')" class="cursor-pointer hover:bg-tg-panelHover p-2 rounded text-center text-xl">😀</span>
+                        <span onclick="insertEmoji('😂')" class="cursor-pointer hover:bg-tg-panelHover p-2 rounded text-center text-xl">😂</span>
+                        <span onclick="insertEmoji('😍')" class="cursor-pointer hover:bg-tg-panelHover p-2 rounded text-center text-xl">😍</span>
+                        <span onclick="insertEmoji('🔥')" class="cursor-pointer hover:bg-tg-panelHover p-2 rounded text-center text-xl">🔥</span>
+                        <span onclick="insertEmoji('👍')" class="cursor-pointer hover:bg-tg-panelHover p-2 rounded text-center text-xl">👍</span>
+                        <span onclick="insertEmoji('🎉')" class="cursor-pointer hover:bg-tg-panelHover p-2 rounded text-center text-xl">🎉</span>
+                        <span onclick="insertEmoji('❤️️')" class="cursor-pointer hover:bg-tg-panelHover p-2 rounded text-center text-xl">❤️</span>
+                        <span onclick="insertEmoji('🚀')" class="cursor-pointer hover:bg-tg-panelHover p-2 rounded text-center text-xl">🚀</span>
+                    </div>
+
+                    <button onclick="toggleEmojiPicker()" class="p-2.5 text-tg-textSecondary hover:text-tg-text hover:bg-tg-panelHover rounded-full transition" title="Emojis">
+                        <i data-lucide="smile" class="w-5 h-5"></i>
+                    </button>
+                    
+                    <input type="file" id="image-file-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                    <button onclick="triggerAttachment()" class="p-2.5 text-tg-textSecondary hover:text-tg-text hover:bg-tg-panelHover rounded-full transition" title="Joindre une image">
+                        <i data-lucide="paperclip" class="w-5 h-5"></i>
+                    </button>
+
+                    <div class="flex-1 bg-tg-inputBg rounded-xl px-4 py-2.5 flex items-center gap-2">
+                        <input type="text" id="message-input" onkeydown="handleKeyDown(event)" placeholder="Écrivez un message sur Noorking..." class="w-full bg-transparent text-tg-text text-sm focus:outline-none placeholder-tg-textSecondary">
+                    </div>
+
+                    <button id="send-btn" onclick="sendMessage()" class="p-2.5 bg-tg-accent hover:bg-tg-accentHover text-white rounded-full transition shadow-md" title="Envoyer">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </main>
+        </div>
+
+        <!-- VIEW 2: IMAGENOW AI INTERFACE GENERATOR -->
+        <div id="view-imagenow" class="flex-1 flex flex-col h-full bg-[#0a0f17] overflow-hidden hidden">
+            
+            <!-- Imagenow Header Bar -->
+            <div class="h-16 bg-[#111823] border-b border-[#1f2937] px-6 flex items-center justify-between z-10 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center text-white font-black shadow-md">
+                        N
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base text-white flex items-center gap-2">
+                            <span>Imagenow</span>
+                            <span class="bg-blue-500/20 text-blue-400 text-[10px] px-2 py-0.5 rounded-full font-mono border border-blue-500/30">AI v2.3</span>
+                        </h1>
+                        <p class="text-xs text-gray-400">Décrivez votre interface ou application pour votre site web Noorking</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="switchAppMode('chat')" class="px-3 py-1.5 bg-[#1f2937] hover:bg-[#374151] text-gray-200 text-xs font-medium rounded-lg transition flex items-center gap-1.5">
+                        <i data-lucide="message-square" class="w-4 h-4"></i> Retour Messagerie
+                    </button>
+                    <button onclick="exportCode()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition shadow-md flex items-center gap-1.5">
+                        <i data-lucide="code" class="w-4 h-4"></i> Exporter Code
+                    </button>
+                </div>
+            </div>
+
+            <!-- Imagenow Main Workspace -->
+            <div class="flex-1 flex flex-col lg:flex-row overflow-hidden p-6 gap-6">
+                
+                <!-- Left Control Panel: Prompt & Settings -->
+                <div class="w-full lg:w-[420px] bg-[#111823] border border-[#1f2937] rounded-2xl p-6 flex flex-col gap-5 overflow-y-auto shrink-0 shadow-xl">
+                    <div>
+                        <h2 class="text-white font-bold text-sm mb-1 flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-blue-400"></i> Create New Interface
+                        </h2>
+                        <p class="text-xs text-gray-400">Décrivez l'interface en langage naturel pour la générer instantanément.</p>
+                    </div>
+
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-xs font-semibold text-gray-300">Prompt / Description</label>
+                        <textarea id="ai-prompt-input" class="w-full h-32 bg-[#0a0f17] border border-[#1f2937] rounded-xl p-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500 resize-none font-sans" placeholder="Ex: A modern dashboard for a fintech app with revenue charts, user list, and navigation bar.">A modern fintech dashboard for Noorking with crypto wallet balance, live analytics charts, and recent transaction logs.</textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold text-gray-300">Model AI</label>
+                            <select class="bg-[#0a0f17] border border-[#1f2937] rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none">
+                                <option>Imagenow UI v2.3</option>
+                                <option>Noorking Turbo Gen</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-xs font-semibold text-gray-300">Style</label>
+                            <select class="bg-[#0a0f17] border border-[#1f2937] rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none">
+                                <option>Minimal Dark</option>
+                                <option>Neumorphic Glass</option>
+                                <option>Vibrant Modern</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button onclick="generateAIPrompt()" class="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-sm font-bold rounded-xl transition shadow-lg flex items-center justify-center gap-2">
+                        <i data-lucide="wand-2" class="w-4 h-4"></i> Générer l'Interface
+                    </button>
+
+                    <!-- Project Settings Accordions -->
+                    <div class="border-t border-[#1f2937] pt-4 flex flex-col gap-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Project Settings</span>
+                        <div class="bg-[#0a0f17] rounded-xl p-3 flex items-center justify-between text-xs text-gray-300 cursor-pointer hover:bg-[#1f2937]/50 transition">
+                            <span class="flex items-center gap-2"><i data-lucide="layout" class="w-4 h-4 text-blue-400"></i> Sidebar Navigation</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+                        </div>
+                        <div class="bg-[#0a0f17] rounded-xl p-3 flex items-center justify-between text-xs text-gray-300 cursor-pointer hover:bg-[#1f2937]/50 transition">
+                            <span class="flex items-center gap-2"><i data-lucide="navigation" class="w-4 h-4 text-blue-400"></i> Navbar Controls</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+                        </div>
+                        <div class="bg-[#0a0f17] rounded-xl p-3 flex items-center justify-between text-xs text-gray-300 cursor-pointer hover:bg-[#1f2937]/50 transition">
+                            <span class="flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4 text-blue-400"></i> Cards & Metrics</span>
+                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Live Preview Display -->
+                <div class="flex-1 bg-[#111823] border border-[#1f2937] rounded-2xl flex flex-col overflow-hidden shadow-2xl relative">
+                    <div class="px-6 py-3.5 border-b border-[#1f2937] flex items-center justify-between bg-[#111823]">
+                        <span class="text-xs font-semibold text-gray-300 flex items-center gap-2">
+                            <i data-lucide="monitor" class="w-4 h-4 text-blue-400"></i> Preview: Noorking Interactive Dashboard (v1.2)
+                        </span>
+                        <div class="flex items-center gap-3 text-xs text-gray-400">
+                            <button onclick="toggleZoom()" class="hover:text-white flex items-center gap-1 transition"><i data-lucide="zoom-in" class="w-3.5 h-3.5"></i> Zoom</button>
+                            <button onclick="openFullReferenceImage()" class="hover:text-white flex items-center gap-1 transition text-blue-400"><i data-lucide="image" class="w-3.5 h-3.5"></i> Voir Modèle Source</button>
+                        </div>
+                    </div>
+
+                    <!-- Canvas / Preview Area featuring the exact requested reference image -->
+                    <div id="preview-canvas-area" class="flex-1 bg-[#0a0f17] p-6 overflow-auto flex items-center justify-center relative">
+                        <div class="max-w-4xl w-full rounded-xl overflow-hidden border border-[#1f2937] shadow-2xl bg-[#111823] group relative">
+                            <img src="Gemini_Generated_Image_lmrrkelmrrkelmrr_2.jpg" class="w-full h-auto object-contain max-h-[650px] mx-auto" alt="Noorking Imagenow Preview">
+                            <div class="absolute bottom-4 right-4 bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-semibold shadow-lg flex items-center gap-1.5 cursor-pointer hover:bg-blue-500 transition" onclick="openFullReferenceImage()">
+                                <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i> Agrandir l'aperçu
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- DRAWER / SETTINGS -->
+        <div id="drawer-backdrop" onclick="toggleDrawer()" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity"></div>
+        <div id="drawer" class="fixed inset-y-0 left-0 w-80 bg-tg-panel z-50 transform -translate-x-full transition-transform duration-300 flex flex-col shadow-2xl">
+            <div class="p-6 bg-tg-dark flex flex-col gap-3 border-b border-[#0e1621]">
+                <div class="flex items-center justify-between">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop" class="w-16 h-16 rounded-full object-cover border-2 border-tg-accent" alt="My Profile">
+                    <button onclick="toggleTheme()" class="p-2 bg-tg-panel hover:bg-tg-panelHover rounded-full text-tg-text transition" title="Changer le thème">
+                        <i data-lucide="moon" id="drawer-theme-icon" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div>
+                    <h3 class="font-bold text-tg-text text-base flex items-center gap-1.5">
+                        <span>Noorking VIP User</span>
+                        <span class="bg-tg-accent text-white text-[10px] px-1.5 py-0.5 rounded font-mono">PRO</span>
+                    </h3>
+                    <p class="text-xs text-tg-accent">+33 7 89 00 11 22</p>
+                    <p class="text-xs text-tg-textSecondary mt-1">@noorking_admin • En ligne</p>
+                </div>
+            </div>
+
+            <div class="flex-1 py-2 overflow-y-auto divide-y divide-[#0e1621]/30">
+                <div class="py-1">
+                    <a href="#" onclick="switchAppMode('imagenow'); toggleDrawer();" class="flex items-center gap-4 px-6 py-3 hover:bg-tg-panelHover text-tg-accent text-sm transition">
+                        <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        <span>Imagenow UI Generator</span>
+                    </a>
+                    <a href="#" onclick="alert('Messages enregistrés Noorking')" class="flex items-center gap-4 px-6 py-3 hover:bg-tg-panelHover text-tg-text text-sm transition">
+                        <i data-lucide="bookmark" class="w-5 h-5 text-tg-textSecondary"></i>
+                        <span>Messages enregistrés</span>
+                    </a>
+                    <a href="#" onclick="alert('Appels Noorking sécurisés')" class="flex items-center gap-4 px-6 py-3 hover:bg-tg-panelHover text-tg-text text-sm transition">
+                        <i data-lucide="phone-call" class="w-5 h-5 text-tg-textSecondary"></i>
+                        <span>Appels</span>
+                    </a>
+                    <a href="#" onclick="alert('Paramètres de sécurité Noorking')" class="flex items-center gap-4 px-6 py-3 hover:bg-tg-panelHover text-tg-text text-sm transition">
+                        <i data-lucide="settings" class="w-5 h-5 text-tg-textSecondary"></i>
+                        <span>Paramètres</span>
+                    </a>
+                </div>
+                <div class="py-1">
+                    <a href="#" onclick="location.reload()" class="flex items-center gap-4 px-6 py-3 hover:bg-tg-panelHover text-red-400 text-sm transition">
+                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                        <span>Déconnexion</span>
+                    </a>
+                </div>
+            </div>
+            <div class="p-4 text-center text-xs text-tg-textSecondary border-t border-[#0e1621]">
+                Noorking Cloud v2.4.0 (Secure Edition)
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Reference Image Zoom Modal -->
+    <div id="image-modal" class="fixed inset-0 bg-black/90 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#111823] border border-[#1f2937] rounded-2xl max-w-5xl w-full max-h-[95vh] flex flex-col shadow-2xl overflow-hidden">
+            <div class="p-4 border-b border-[#1f2937] flex items-center justify-between">
+                <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                    <i data-lucide="image" class="w-4 h-4 text-blue-400"></i>
+                    <span>Modèle de Référence Imagenow - Noorking</span>
+                </h3>
+                <button onclick="closeImageModal()" class="p-1.5 text-gray-400 hover:text-white rounded-full hover:bg-[#1f2937] transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 bg-[#0a0f17] text-center">
+                <img src="Gemini_Generated_Image_lmrrkelmrrkelmrr_2.jpg" class="max-w-full mx-auto rounded-xl shadow-2xl border border-[#1f2937]" alt="Full Reference Image">
+            </div>
+            <div class="p-3 bg-[#111823] border-t border-[#1f2937] text-right">
+                <button onclick="closeImageModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg transition">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatsData = [
+            {
+                id: 1,
+                type: 'chats',
+                name: 'Marie Laurent',
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop',
+                status: 'en ligne',
+                online: true,
+                unread: 2,
+                pinned: true,
+                messages: [
+                    { sender: 'them', text: 'Bonjour ! J\'ai une question sur Noorking.', time: '14:09', type: 'text' },
+                    { sender: 'them', text: 'Le générateur Imagenow est incroyable !', time: '14:02', type: 'text' },
+                    { sender: 'me', text: 'Oui tout à fait ! C\'est super rapide et sécurisé.', time: '14:01', type: 'text' }
+                ]
+            },
+            {
+                id: 2,
+                type: 'groups',
+                name: 'Noorking Group Chat',
+                avatar: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=150&auto=format&fit=crop',
+                status: '5 participants',
+                online: true,
+                unread: 1,
+                pinned: true,
+                messages: [
+                    { sender: 'them', text: 'On teste le générateur d\'interface ce soir ?', time: '13:58', type: 'text' }
+                ]
+            },
+            {
+                id: 3,
+                type: 'channels',
+                name: 'Noorking Announcements',
+                avatar: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=150&auto=format&fit=crop',
+                status: '12.4k abonnés',
+                online: true,
+                unread: 0,
+                pinned: false,
+                messages: [
+                    { sender: 'them', text: 'Mise à jour v2.4 déployée avec succès !', time: '10:15', type: 'text' }
+                ]
+            }
+        ];
+
+        let currentChatId = null;
+        let currentFilter = 'all';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderChats();
+            lucide.createIcons();
+        });
+
+        function switchAppMode(mode) {
+            const chatView = document.getElementById('view-chat');
+            const imagenowView = document.getElementById('view-imagenow');
+            const chatNavBtn = document.getElementById('nav-chat-btn');
+            const imagenowNavBtn = document.getElementById('nav-imagenow-btn');
+
+            if (mode === 'chat') {
+                chatView.classList.remove('hidden');
+                imagenowView.classList.add('hidden');
+                chatNavBtn.className = 'p-3 bg-tg-active text-white rounded-2xl transition shadow-md';
+                imagenowNavBtn.className = 'p-3 text-tg-textSecondary hover:text-tg-text hover:bg-tg-panel rounded-2xl transition';
+            } else {
+                chatView.classList.add('hidden');
+                imagenowView.classList.remove('hidden');
+                imagenowNavBtn.className = 'p-3 bg-blue-600 text-white rounded-2xl transition shadow-md';
+                chatNavBtn.className = 'p-3 text-tg-textSecondary hover:text-tg-text hover:bg-tg-panel rounded-2xl transition';
+            }
+            lucide.createIcons();
+        }
+
+        function renderChats() {
+            const container = document.getElementById('chats-list');
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            
+            container.innerHTML = '';
+
+            const filtered = chatsData.filter(chat => {
+                const matchesTab = currentFilter === 'all' || chat.type === currentFilter;
+                const matchesSearch = chat.name.toLowerCase().includes(searchQuery);
+                return matchesTab && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-tg-textSecondary text-xs">Aucune discussion Noorking trouvée</div>`;
+                return;
+            }
+
+            filtered.forEach(chat => {
+                const lastMsg = chat.messages[chat.messages.length - 1] || { text: '', time: '' };
+                const isSelected = chat.id === currentChatId;
+
+                const div = document.createElement('div');
+                div.className = `flex items-center gap-3 px-3 py-2.5 cursor-pointer transition ${isSelected ? 'bg-tg-active/40' : 'hover:bg-tg-panelHover'}`;
+                div.onclick = () => selectChat(chat.id);
+
+                div.innerHTML = `
+                    <div class="relative shrink-0">
+                        <img src="${chat.avatar}" class="w-12 h-12 rounded-full object-cover" alt="${chat.name}">
+                        ${chat.online ? '<span class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-tg-panel rounded-full"></span>' : ''}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <h4 class="font-semibold text-sm text-tg-text truncate">${chat.name}</h4>
+                            <span class="text-[11px] text-tg-textSecondary shrink-0">${lastMsg.time}</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <p class="text-xs text-tg-textSecondary truncate pr-2">${lastMsg.type === 'image' ? '[Photo]' : lastMsg.text}</p>
+                            ${chat.unread > 0 ? `<span class="bg-tg-accent text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0">${chat.unread}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function switchTab(tab) {
+            currentFilter = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.dataset.tab === tab) {
+                    btn.className = 'tab-btn px-3 py-1.5 rounded-full text-xs font-medium text-tg-accent bg-tg-active transition whitespace-nowrap';
+                } else {
+                    btn.className = 'tab-btn px-3 py-1.5 rounded-full text-xs font-medium text-tg-textSecondary hover:text-tg-text hover:bg-tg-panelHover transition whitespace-nowrap';
+                }
+            });
+            renderChats();
+        }
+
+        function filterChats() {
+            renderChats();
+        }
+
+        function selectChat(id) {
+            currentChatId = id;
+            const chat = chatsData.find(c => c.id === id);
+            if (!chat) return;
+
+            chat.unread = 0;
+            renderChats();
+
+            document.getElementById('header-name').innerText = chat.name;
+            document.getElementById('header-status').innerText = chat.status;
+            document.getElementById('header-avatar').src = chat.avatar;
+            document.getElementById('header-status-dot').classList.toggle('hidden', !chat.online);
+
+            document.getElementById('chat-input-area').classList.remove('hidden');
+            renderMessages();
+
+            if (window.innerWidth < 768) {
+                document.getElementById('sidebar').classList.add('-translate-x-full');
+            }
+        }
+
+        function renderMessages() {
+            const chat = chatsData.find(c => c.id === currentChatId);
+            const container = document.getElementById('messages-container');
+            if (!chat) return;
+
+            container.innerHTML = '';
+            chat.messages.forEach(msg => {
+                const isMe = msg.sender === 'me';
+                const div = document.createElement('div');
+                div.className = `flex ${isMe ? 'justify-end' : 'justify-start'} mb-2`;
+
+                let contentHtml = '';
+                if (msg.type === 'image') {
+                    contentHtml = `<img src="${msg.text}" class="rounded-xl max-w-xs max-h-60 object-cover mb-1 cursor-pointer" onclick="window.open('${msg.text}')" alt="Uploaded">`;
+                } else {
+                    contentHtml = `<p class="leading-relaxed wrap-break">${escapeHtml(msg.text)}</p>`;
+                }
+
+                div.innerHTML = `
+                    <div class="max-w-[75%] md:max-w-[60%] rounded-2xl p-2.5 text-sm shadow-sm relative ${isMe ? 'bg-tg-bubbleOut text-white rounded-br-none' : 'bg-tg-bubbleIn text-tg-text rounded-bl-none'}">
+                        ${contentHtml}
+                        <div class="flex items-center justify-end gap-1 mt-1 text-[10px] text-tg-textSecondary px-1">
+                            <span>${msg.time}</span>
+                            ${isMe ? '<i data-lucide="check-check" class="w-3.5 h-3.5 text-tg-accent"></i>' : ''}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+            container.scrollTop = container.scrollHeight;
+            lucide.createIcons();
+        }
+
+        function triggerAttachment() {
+            document.getElementById('image-file-input').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file || !currentChatId) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageUrl = e.target.result;
+                const chat = chatsData.find(c => c.id === currentChatId);
+                const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                chat.messages.push({
+                    sender: 'me',
+                    text: imageUrl,
+                    time: now,
+                    type: 'image'
+                });
+
+                renderMessages();
+                renderChats();
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('message-input');
+            const text = input.value.trim();
+            if (!text || !currentChatId) return;
+
+            const chat = chatsData.find(c => c.id === currentChatId);
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            chat.messages.push({
+                sender: 'me',
+                text: text,
+                time: now,
+                type: 'text'
+            });
+
+            input.value = '';
+            renderMessages();
+            renderChats();
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('drawer');
+            const backdrop = document.getElementById('drawer-backdrop');
+            const isOpen = drawer.classList.contains('translate-x-0');
+
+            if (isOpen) {
+                drawer.classList.remove('translate-x-0');
+                drawer.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            } else {
+                drawer.classList.remove('-translate-x-full');
+                drawer.classList.add('translate-x-0');
+                backdrop.classList.remove('hidden');
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+            }
+            lucide.createIcons();
+        }
+
+        function backToSidebar() {
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+        }
+
+        function toggleEmojiPicker() {
+            document.getElementById('emoji-picker').classList.toggle('hidden');
+        }
+
+        function insertEmoji(emoji) {
+            const input = document.getElementById('message-input');
+            input.value += emoji;
+            toggleEmojiPicker();
+            input.focus();
+        }
+
+        function simulateCall() {
+            alert('Établissement d\'un appel Noorking chiffré...');
+        }
+
+        function toggleChatMenu() {
+            alert('Options Noorking : Épingler, Silencieux, Vider l\'historique.');
+        }
+
+        function openFullReferenceImage() {
+            document.getElementById('image-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeImageModal() {
+            document.getElementById('image-modal').classList.add('hidden');
+        }
+
+        function generateAIPrompt() {
+            const promptText = document.getElementById('ai-prompt-input').value;
+            if (!promptText) {
+                alert('Veuillez entrer une description d\'interface.');
+                return;
+            }
+            alert('Génération IA en cours pour : "' + promptText + '"...\nInterface actualisée avec succès !');
+        }
+
+        function exportCode() {
+            alert('Code HTML, CSS et React exporté avec succès depuis Noorking Imagenow !');
+        }
+
+        function toggleZoom() {
+            alert('Mode zoom activé sur le canevas Imagenow.');
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>
